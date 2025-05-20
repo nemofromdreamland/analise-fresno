@@ -13,12 +13,10 @@ Eu nunca fui ...,2024,Quando o Pesadelo Acabar,Desastre...
 from httpx import get
 from parsel import Selector
 
-response = get('https://genius.com/Fresno-quando-o-pesadelo-acabar-lyrics')
-
-if response.status_code == 200:
-    # Salvar o HTML em um arquivo
-    with open('letra_fresno.html', 'w', encoding='utf-8') as f:  # Nome alterado
-        f.write(response.text)
-    print("Arquivo salvo com sucesso!")
-else:
-    print(f"Erro: Status code {response.status_code}")
+def letra(url: str) -> str:
+    """Pega a letra de uma música"""
+    response = get(url) 
+    s = Selector(response.text)
+    letra = '\n'.join(s.css('[data-lyrics-container] *::text').getall())
+    print(letra)
+    return letra
