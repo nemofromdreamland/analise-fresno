@@ -8,4 +8,5 @@ dependencies = [
     "dateparser>=1.2.1",
     "httpx>=0.28.1",
     "parsel>=1.10.0",
+    "polars>=1.30.0",
 ]

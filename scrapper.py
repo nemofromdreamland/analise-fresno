@@ -20,7 +20,6 @@ def letra(url: str) -> str:
     response = get(url)
     s = Selector(response.text)
     letra = '\n'.join(s.css('[data-lyrics-container] *::text').getall())
-    # print(letra) # Descomente para ver a letra no console
     return letra
 
 def faixas(url: str) -> list[tuple[str, str]]:
@@ -38,7 +37,7 @@ def discos(url: str) -> list[tuple[str | None, ...]]:
     """Pega os discos da página de álbuns do artista"""
     response = get(url)
     s = Selector(response.text)
-    discos = s.css('.ddfKcW') # Seletor para os álbuns na página do artista
+    discos = s.css('.ddfKcW')
 
     resultado = []
 
@@ -57,40 +56,33 @@ def extrair_info_album_individual(url_album: str) -> tuple[str, str, str | None]
     response = get(url_album)
     s = Selector(response.text)
 
-    # Seletor para o nome do álbum
     nome_album = s.css('h1.header_with_cover_art-primary_info-title::text').get()
     if nome_album:
         nome_album = nome_album.strip()
     else:
-        nome_album = "Nome do Álbum Desconhecido" # Fallback
+        nome_album = "Nome do Álbum Desconhecido"
 
-    # Seletor para o ano do álbum. Pode precisar de ajuste!
-    # Inspecione o HTML da página do álbum para confirmar o seletor exato.
-    # Exemplo de seletor comum para a data de lançamento:
     ano_album_raw = s.css('span.metadata_unit-info::text').getall()
     ano_album = None
     for text_content in ano_album_raw:
-        if 'Released' in text_content: # Busca por texto "Released" ou similar
+        if 'Released' in text_content:
             parts = text_content.split(' ')
             for part in parts:
-                if part.isdigit() and len(part) == 4: # Procura um número de 4 dígitos (ano)
+                if part.isdigit() and len(part) == 4:
                     ano_album = part
                     break
             if ano_album:
                 break
     
     if not ano_album:
-        # Tenta pegar de uma meta tag, ou de outro local comum
         meta_date = s.css('meta[property="og:title"]::attr(content)').get()
         if meta_date:
             parsed_date = dateparser.parse(meta_date)
             if parsed_date:
                 ano_album = str(parsed_date.year)
 
-
-    # Se tudo falhar, ou se você quiser definir manualmente para este caso:
     if not ano_album:
-         ano_album = "2001-12-22" # Data de lançamento confirmada para "O acaso do erro"
+        ano_album = "2001-12-22"
 
     return (url_album, nome_album, ano_album)
 
@@ -103,15 +95,18 @@ with open('fresno.csv', 'w', encoding='utf-8', newline='') as f:
     writer = DictWriter(f, ['album', 'data', 'musica', 'letra'])
     writer.writeheader()
 
-    # Processa os álbuns encontrados na página principal de álbuns do artista
     for disco in discos(url_fresno_albuns):
-        # A URL do disco, o nome do disco e o ano do disco
         disco_url, disco_nome, disco_ano = disco 
         
+        # Parse the date and format it as a full datetime string
+        parsed_date = dateparser.parse(disco_ano) if disco_ano else None
+        # Format as YYYY-MM-DD HH:MM:SS (or just YYYY-MM-DD 00:00:00 if no time)
+        formatted_date = parsed_date.strftime('%Y-%m-%d %H:%M:%S') if parsed_date else None
+
         for faixa_nome, faixa_url in faixas(disco_url):
             row = {
                 'album': disco_nome,
-                'data': dateparser.parse(disco_ano).strftime('%Y-%m-%d') if disco_ano else None,
+                'data': formatted_date, # Use the full datetime string here
                 'musica': faixa_nome,
                 'letra': letra(faixa_url)
             }
@@ -120,14 +115,16 @@ with open('fresno.csv', 'w', encoding='utf-8', newline='') as f:
 
     # ---
 
-    # Adiciona o álbum "O acaso do erro" separadamente
-    # Primeiro, extraímos as informações do álbum "O acaso do erro"
     disco_url_acaso, disco_nome_acaso, disco_ano_acaso = extrair_info_album_individual(url_o_acaso_do_erro)
     
+    # Parse and format for "O acaso do erro" as well
+    parsed_date_acaso = dateparser.parse(disco_ano_acaso) if disco_ano_acaso else None
+    formatted_date_acaso = parsed_date_acaso.strftime('%Y-%m-%d %H:%M:%S') if parsed_date_acaso else None
+
     for faixa_nome, faixa_url in faixas(disco_url_acaso):
         row = {
             'album': disco_nome_acaso,
-            'data': dateparser.parse(disco_ano_acaso).strftime('%Y-%m-%d') if disco_ano_acaso else None,
+            'data': formatted_date_acaso, # Use the full datetime string here
             'musica': faixa_nome,
             'letra': letra(faixa_url)
         }
