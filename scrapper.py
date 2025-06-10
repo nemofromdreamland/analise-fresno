@@ -54,7 +54,7 @@ def discos(url: str) -> list[tuple[str | None, ...]]:
 
 url = 'https://genius.com/artists/Fresno/albums'
 
-with open('deadfish.csv', 'w') as f:
+with open('fresno.csv', 'w') as f:
     writer = DictWriter(f, ['album', 'data', 'musica', 'letra'])
     writer.writeheader()
     for disco in discos(url):
