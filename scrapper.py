@@ -16,11 +16,26 @@ from httpx import get
 from parsel import Selector
 
 def letra(url: str) -> str:
-    """Pega a letra de uma música"""
+    """Pega a letra de uma música, removendo os elementos indesejados."""
     response = get(url)
     s = Selector(response.text)
-    letra = '\n'.join(s.css('[data-lyrics-container] *::text').getall())
-    return letra
+    
+    # 1. Seleciona o container principal que tem a letra e os extras
+    lyrics_container = s.css('div[data-lyrics-container="true"]')
+    
+    # 2. Encontra e remove o bloco do cabeçalho (contribuidores, bio, etc.)
+    #    que está marcado com 'data-exclude-from-selection'
+    lyrics_container.css('div[data-exclude-from-selection="true"]').remove()
+    
+    # 3. Agora, com o container "limpo", extraímos todo o texto restante.
+    #    O seletor '::text' pega todo o texto, incluindo o que está dentro
+    #    de <a>, <b> e os textos soltos entre as tags <br>.
+    text_fragments = lyrics_container.css('::text').getall()
+    
+    # 4. Junta os fragmentos, limpando espaços extras e linhas em branco
+    letra_limpa = '\n'.join(line.strip() for line in text_fragments if line.strip())
+    
+    return letra_limpa
 
 def faixas(url: str) -> list[tuple[str, str]]:
     """Pega as faixas de um álbum ou chart"""
