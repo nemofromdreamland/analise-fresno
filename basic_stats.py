@@ -25,7 +25,7 @@ def lemmas(text: str) -> int:
     doc = nlp(text)
     return len(set([t.lemma_ for t in doc if not t.is_punct]))
 
-fr = pl.read_csv('fresno_limpo.csv')
+fr = pl.read_csv('fresno_limpo2.csv')
 
 new_fr = fr.with_columns(
     (
@@ -71,4 +71,4 @@ new_fr = fr.with_columns(
     ),
 )
 
-new_fr.write_csv('fresno_stats.csv')
+new_fr.write_csv('fresno_stats2.csv')
