@@ -6,6 +6,7 @@ import spacy
 from collections import Counter
 
 nlp = spacy.load('pt_core_news_lg')
+caminho_da_fonte = 'NotoSansJP-Regular.ttf' 
 
 stopword = ["a","ah","acerca","adeus","agora","ainda","alem",
              "algmas","algo","algumas","alguns","ali","além",
@@ -71,7 +72,16 @@ stopword = ["a","ah","acerca","adeus","agora","ainda","alem",
              "lo", "la", "ia", "just", "i'm", "yeah", "in", "this", "therefore", "this", "you", "vou",
              "ahn", "so", "but", "tava", "cê", "ti", "4x", "iria", "hein", "gente", "deixa", "ra",
              "us", "eu","hey","trás", "one", "pros", "deu",
-             "dei", "viu", "irei", "fiz", "t"] + list(STOPWORDS)
+             "dei", "viu", "irei", "fiz", "t", "3x", "uoh", "i'm", "i 'm", 
+             "10000", "uh-uh", "essa", "que", "ohse", "1", "alguém", "quis", "4x)se", 
+             "ninguém", "'s", "i'd", "bout", " 's", "i'd", 
+             "i 'd", "i' d", "30000",'あそこ', 'あっ', 'あと', 'い', 'いう', 'います', 'いる', 'う', 'うち',
+            'お', 'おり', 'おります', 'か', 'から', 'が', 'き', 'ここ', 'こと', 'この',
+            'これ', 'さ', 'し', 'しかし', 'する', 'ず', 'せ', 'せる', 'そこ', 'その', 'それ', 
+            'た', 'ため', 'だ', 'て', 'で', 'でき', 'できる', 'です', 'では', 'でも', 'と', 
+            'ない', 'な', 'など', 'に', 'の', 'は', 'ます', 'ました', 'まで', 'も', 'もの', 
+            'や', 'よう', 'より', 'られる', 'れ', 'れる', 'を', 'ん', '何', 
+            '私', "'S", "' S", "i' m", "meu", "meus"] + list(STOPWORDS)
 
 
 df = pl.read_csv('fresno_stats2.csv')
@@ -79,15 +89,20 @@ wc = WordCloud(
     width=1280,
     height=720,
     background_color='white',
-    stopwords=stopword
+    stopwords=stopword,
+    font_path=caminho_da_fonte
 )
 
 
 
 for album in df.sort('data').partition_by('album'):
-    palavras = nlp(' '.join(album['letra'].drop_nulls()))
+    palavras = nlp(''.join(album['letra'].drop_nulls()))
 
-    contador = Counter(palavra for palavra in palavras if palavra not in stopword)
+    contador = Counter(
+        palavra.text for palavra in palavras 
+        if palavra.text not in stopword and not palavra.is_punct
+    )
+    
     img = wc.generate_from_frequencies(contador)
 
     fig, ax = plt.subplots()
